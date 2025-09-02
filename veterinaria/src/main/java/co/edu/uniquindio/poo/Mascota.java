@@ -11,6 +11,8 @@ public class Mascota {
   private String color;
   private double peso;
   private ArrayList<String> listaEnfermedades;
+  private Veterinaria veterinaria;
+  private Propietario propietario;
 
   public Mascota(String id, String nombre, String especie, String raza, int edad, String color, double peso) {
     this.id = id;
@@ -91,6 +93,22 @@ public class Mascota {
     if (enfermedad != null) {
       this.listaEnfermedades.add(enfermedad);
     }
+  }
+
+  public Veterinaria getVeterinaria() {
+    return veterinaria;
+  }
+
+  public void setVeterinaria(Veterinaria veterinaria) {
+    this.veterinaria = veterinaria;
+  }
+
+  public Propietario getPropietario() {
+    return propietario;
+  }
+
+  public void setPropietario(Propietario propietario) {
+    this.propietario = propietario;
   }
 
   @Override

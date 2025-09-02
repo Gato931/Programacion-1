@@ -6,13 +6,21 @@ public class Veterinaria {
   private String nombre;
   private String ubicacion;
   private String nit;
+  private String telefono;
   private ArrayList<Mascota> listaMascotas;
+  private ArrayList<Cita> listaCitas;
+  private ArrayList<Propietario> listaPropietarios;
+  private ArrayList<Veterinario> listaVeterinarios;
 
-  public Veterinaria(String nombre, String ubicacion, String nit) {
+  public Veterinaria(String nombre, String ubicacion, String nit, String telefono) {
     this.nombre = nombre;
     this.ubicacion = ubicacion;
     this.nit = nit;
+    this.telefono = telefono;
     this.listaMascotas = new ArrayList<>();
+    this.listaCitas = new ArrayList<>();
+    this.listaPropietarios = new ArrayList<>();
+    this.listaVeterinarios = new ArrayList<>();
   }
 
   public String getNombre() {
@@ -39,6 +47,14 @@ public class Veterinaria {
     this.nit = nit;
   }
 
+  public String getTelefono() {
+    return telefono;
+  }
+
+  public void setTelefono(String telefono) {
+    this.telefono = telefono;
+  }
+
   public ArrayList<Mascota> getListaMascotas() {
     return listaMascotas;
   }
@@ -47,8 +63,33 @@ public class Veterinaria {
     this.listaMascotas = listaMascotas;
   }
 
+  public ArrayList<Cita> getListaCitas() {
+    return listaCitas;
+  }
+
+  public void setListaCitas(ArrayList<Cita> listaCitas) {
+    this.listaCitas = listaCitas;
+  }
+
+  public ArrayList<Propietario> getListaPropietarios() {
+    return listaPropietarios;
+  }
+
+  public void setListaPropietarios(ArrayList<Propietario> listaPropietarios) {
+    this.listaPropietarios = listaPropietarios;
+  }
+
+  public ArrayList<Veterinario> getListaVeterinarios() {
+    return listaVeterinarios;
+  }
+
+  public void setListaVeterinarios(ArrayList<Veterinario> listaVeterinarios) {
+    this.listaVeterinarios = listaVeterinarios;
+  }
+
   /**
    * Este metodo permite buscar una mascota de una lista
+   * 
    * @param id
    * @return
    */
@@ -64,6 +105,7 @@ public class Veterinaria {
 
   /**
    * Este metodo permite agregar una mascota de una lista
+   * 
    * @param nuevaMascota
    * @return
    */
@@ -80,6 +122,7 @@ public class Veterinaria {
 
   /**
    * Este metodo permite eliminar una mascota de una lista
+   * 
    * @param id
    * @return
    */
@@ -95,7 +138,9 @@ public class Veterinaria {
   }
 
   /**
-   * Este metodo permite actualizar la informacion existente de una mascota de una lista
+   * Este metodo permite actualizar la informacion existente de una mascota de una
+   * lista
+   * 
    * @param numeroIdentificacion
    * @param nuevaInformacion
    * @return
@@ -110,7 +155,7 @@ public class Veterinaria {
       mascotaEncontrada.agregarEnfermedad(enfermedad);
       mensaje = "La informacion de la mascota fue actualizada correctamente en la base de datos";
     }
-      return mensaje;
+    return mensaje;
   }
 
   /**
@@ -127,6 +172,13 @@ public class Veterinaria {
       mensaje += mascota.toString() + "\n";
     }
     return mensaje;
+  }
+
+  @Override
+  public String toString() {
+    return "Veterinaria [nombre=" + nombre + ", ubicacion=" + ubicacion + ", nit=" + nit + ", telefono=" + telefono
+        + ", listaMascotas=" + listaMascotas + ", listaCitas=" + listaCitas + ", listaPropietarios=" + listaPropietarios
+        + ", listaVeterinarios=" + listaVeterinarios + "]";
   }
 
 }

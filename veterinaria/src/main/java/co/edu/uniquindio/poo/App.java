@@ -5,14 +5,24 @@ import javax.swing.JOptionPane;
 public class App {
 
   public static void main(String[] args) {
-    Veterinaria veterinaria = new Veterinaria("Amigos peludos", "Universidad del Quindio", "123321");
+    // Veterinaria incial
+    Veterinaria veterinaria = new Veterinaria("Amigos peludos", "Universidad del Quindio", "123321", "33333");
+
+    // Propietarios iniciales
+    Propietario propietario1 = new Propietario("Mateo", "123", "8923", "Calle 8", "Gomez");
+    Propietario propietario2 = new Propietario("Luisa", "321", "2389", "Calle 9", "Galan");
 
     // Mascotas iniciales
     Mascota mascota1 = new Mascota("111", "Lucas", "Perro", "Labrador", 5, "Dorado", 19.5);
+    mascota1.setPropietario(propietario1);
+    mascota1.setVeterinaria(veterinaria);
     mascota1.agregarEnfermedad("Rabia");
-    Mascota mascota2 = new Mascota("222", "Misu", "Gato", "Siames", 3, "Blanco", 4.3);
-    mascota2.agregarEnfermedad("Alergia");
     veterinaria.agregarMascota(mascota1);
+
+    Mascota mascota2 = new Mascota("222", "Misu", "Gato", "Siames", 3, "Blanco", 4.3);
+    mascota2.setPropietario(propietario2);
+    mascota2.setVeterinaria(veterinaria);
+    mascota2.agregarEnfermedad("Alergia");
     veterinaria.agregarMascota(mascota2);
 
     int opcion = 0;
@@ -128,6 +138,7 @@ public class App {
   /**
    * Metodo para solicitar cadenas de numeros a traves del JOption, comprobar que
    * no sea nulo ni este vacio
+   * 
    * @param mensaje
    * @return
    */
@@ -147,6 +158,7 @@ public class App {
   /**
    * Metodo para solicitar cadenas de letras a traves del JOption, comprobar que
    * no sea nulo ni este vacio
+   * 
    * @param mensaje
    * @return
    */
@@ -166,6 +178,7 @@ public class App {
   /**
    * Metodo para solicitar un entero a traves del JOption, comprobar que no sea
    * nulo ni este vacio y convertirlo en entero
+   * 
    * @param mensaje
    * @return
    */
@@ -184,6 +197,7 @@ public class App {
   /**
    * Metodo para solicitar un decimal a traves del JOption, comprobar que no sea
    * nulo ni este vacio y convertirlo en decimal
+   * 
    * @param mensaje
    * @return
    */
