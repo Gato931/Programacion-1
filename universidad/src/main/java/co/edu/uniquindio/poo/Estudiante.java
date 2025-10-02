@@ -5,58 +5,66 @@ public abstract class Estudiante {
     private String nombre;
     private String documento;
     private String programa;
-    private int semestre;
+    private int semestreActual;
 
-    public Estudiante(String id, String nombre, String documento, String programa, int semestre) {
+    public Estudiante(String id, String nombre, String documento, String programa, int semestreActual) {
+        if (id == null || id.isBlank())
+            throw new IllegalArgumentException("ID invalido");
+        if (nombre == null || nombre.isBlank())
+            throw new IllegalArgumentException("Nombre invalido");
+        if (semestreActual < 0)
+            throw new IllegalArgumentException("Semestre invalido");
+        if (documento == null || documento.isBlank())
+            throw new IllegalArgumentException("Documento invalido");
+        if (programa == null || programa.isBlank())
+            throw new IllegalArgumentException("Programa invalido");
         this.id = id;
         this.nombre = nombre;
-        this.documento = documento;
-        this.programa = programa;
-        this.semestre = semestre;
+        this.documento = documento == null ? "" : documento;
+        this.programa = programa == null ? "" : programa;
+        this.semestreActual = semestreActual;
     }
 
     public String getId() {
         return id;
     }
 
-    public void setId(String id) {
-        this.id = id;
-    }
-
     public String getNombre() {
         return nombre;
-    }
-
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
     }
 
     public String getDocumento() {
         return documento;
     }
 
-    public void setDocumento(String documento) {
-        this.documento = documento;
-    }
-
     public String getPrograma() {
         return programa;
     }
 
+    public int getSemestreActual() {
+        return semestreActual;
+    }
+
+    public void setNombre(String nombre) {
+        if (nombre == null || nombre.isBlank())
+            throw new IllegalArgumentException("Nombre invalido");
+        this.nombre = nombre;
+    }
+
     public void setPrograma(String programa) {
+        if (programa == null || programa.isBlank())
+            throw new IllegalArgumentException("Programa invalido");
         this.programa = programa;
     }
 
-    public int getSemestre() {
-        return semestre;
-    }
-
-    public void setSemestre(int semestre) {
-        this.semestre = semestre;
+    public void setSemestreActual(int semestre) {
+        if (semestre < 0)
+            throw new IllegalArgumentException("Semestre invalido");
+        this.semestreActual = semestre;
     }
 
     @Override
     public String toString() {
-        return nombre + " (" + programa + ")";
+        return String.format("%s (ID:%s) - %s, sem %d", nombre, id, programa, semestreActual);
     }
 }
