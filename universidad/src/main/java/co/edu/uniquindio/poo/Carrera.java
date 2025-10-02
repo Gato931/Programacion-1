@@ -170,7 +170,7 @@ public class Carrera {
         materia.inscribir(estudiante);
     }
 
-    public List<Estudiante> listarEstudiantesMatriculados(String codigoMateria) {
+    public List<Estudiante> listarEstudiantesInscritos(String codigoMateria) {
         Materia materia = buscarMateria(codigoMateria)
                 .orElseThrow(() -> new NoSuchElementException("Materia no encontrada: " + codigoMateria));
         return materia.obtenerEstudiantesInscritos();

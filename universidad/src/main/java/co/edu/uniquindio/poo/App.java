@@ -223,7 +223,7 @@ public class App {
     private static void listarEstudiantesMateria() {
         try {
             String codigo = solicitar("Codigo de la materia: ");
-            List<Estudiante> inscritos = carrera.listarEstudiantesMatriculados(codigo);
+            List<Estudiante> inscritos = carrera.listarEstudiantesInscritos(codigo);
             if (inscritos.isEmpty()) {
                 JOptionPane.showMessageDialog(null, "No hay estudiantes inscritos en " + codigo);
             } else {

@@ -20,8 +20,8 @@ public abstract class Estudiante {
             throw new IllegalArgumentException("Programa invalido");
         this.id = id;
         this.nombre = nombre;
-        this.documento = documento == null ? "" : documento;
-        this.programa = programa == null ? "" : programa;
+        this.documento = documento;
+        this.programa = programa;
         this.semestreActual = semestreActual;
     }
 
