@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+  fx:controller="co.edu.uniquindio.poo.viewController.DashboardViewController"
+  prefHeight="650"
+  prefWidth="1000">
+
+  <top>
+    <HBox spacing="20" prefHeight="80"
+      style="-fx-background-color: #3498db; -fx-padding: 15;">
+      <Label text="MONEDERO VIRTUAL"
+        style="-fx-text-fill: white; -fx-font-size: 20px; -fx-font-weight: bold;" />
+      <Label text="          " />
+      <Label fx:id="nombreLabel" text="Usuario" style="-fx-text-fill: white; -fx-font-size: 14px;" />
+      <Label fx:id="rangoLabel" text="Bronce" style="-fx-text-fill: white; -fx-font-size: 14px;" />
+      <Label fx:id="puntosLabel" text="0 pts" style="-fx-text-fill: white; -fx-font-size: 14px;" />
+      <Label fx:id="saldoTotalLabel" text="0.00"
+        style="-fx-text-fill: white; -fx-font-size: 20px; -fx-font-weight: bold;" />
+    </HBox>
+  </top>
+
+  <left>
+    <VBox spacing="10" prefWidth="180" style="-fx-background-color: #34495e; -fx-padding: 15;">
+      <Label text="ACCIONES"
+        style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;" />
+      <Button text="Crear Monedero" onAction="#handleCrearMonedero"
+        style="-fx-background-color: #3498db; -fx-text-fill: white;" prefWidth="150" />
+      <Button text="Ver Beneficios" onAction="#handleVerBeneficios"
+        style="-fx-background-color: #3498db; -fx-text-fill: white;" prefWidth="150" />
+      <Button text="Mis Beneficios" onAction="#handleVerBeneficiosActivos"
+        style="-fx-background-color: #3498db; -fx-text-fill: white;" prefWidth="150" />
+      <Button text="Ver Reporte" onAction="#handleVerReporte"
+        style="-fx-background-color: #3498db; -fx-text-fill: white;" prefWidth="150" />
+      <Button text="Análisis de Gastos" onAction="#handleVerAnalisisGastos"
+        style="-fx-background-color: #3498db; -fx-text-fill: white;" prefWidth="150" />
+    </VBox>
+  </left>
+
+  <center>
+    <VBox spacing="15" style="-fx-padding: 20; -fx-background-color: #ecf0f1;">
+      <Label text="Nueva Transaccion" style="-fx-font-size: 18px; -fx-font-weight: bold;" />
+
+      <HBox spacing="10">
+        <VBox spacing="5">
+          <Label text="Tipo:" style="-fx-font-weight: bold;" />
+          <ComboBox fx:id="tipoTransaccionCombo" prefWidth="150" />
+        </VBox>
+
+        <VBox spacing="5">
+          <Label text="Monedero:" style="-fx-font-weight: bold;" />
+          <ComboBox fx:id="monederoOrigenCombo" prefWidth="150" />
+        </VBox>
+
+        <VBox spacing="5">
+          <Label text="Monto:" style="-fx-font-weight: bold;" />
+          <TextField fx:id="montoField" prefWidth="120" promptText="Ej: 50000" />
+        </VBox>
+      </HBox>
+
+      <HBox spacing="10">
+        <VBox spacing="5">
+          <Label text="Email Destino:" style="-fx-font-weight: bold;" />
+          <TextField fx:id="emailDestinoField" prefWidth="250" promptText="destinatario@email.com" />
+        </VBox>
+
+        <VBox spacing="5">
+          <Label text="Monedero Destino:" style="-fx-font-weight: bold;" />
+          <ComboBox fx:id="monederoDestinoCombo" prefWidth="150" />
+        </VBox>
+      </HBox>
+
+      <VBox spacing="5">
+        <Label text="Descripcion:" style="-fx-font-weight: bold;" />
+        <TextArea fx:id="descripcionArea" prefHeight="70" promptText="Opcional..."
+          style="-fx-border-color: #bdc3c7; -fx-border-radius: 5;" />
+      </VBox>
+
+      <Button fx:id="ejecutarButton" text="Ejecutar Transaccion"
+        onAction="#handleEjecutarTransaccion"
+        style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold;"
+        prefWidth="200" prefHeight="35" />
+
+      <TabPane prefHeight="250" style="-fx-background-color: white;">
+        <Tab text="Mis Monederos">
+          <ListView fx:id="monederosListView" style="-fx-font-size: 13px;" />
+        </Tab>
+        <Tab text="Transacciones">
+          <ListView fx:id="transaccionesListView" style="-fx-font-size: 13px;" />
+        </Tab>
+        <Tab text="Notificaciones">
+          <ListView fx:id="notificacionesListView" style="-fx-font-size: 13px;" />
+        </Tab>
+        <Tab text="Contactos">
+          <ListView fx:id="contactosListView" style="-fx-font-size: 13px;" />
+        </Tab>
+      </TabPane>
+    </VBox>
+  </center>
+
+</BorderPane>
