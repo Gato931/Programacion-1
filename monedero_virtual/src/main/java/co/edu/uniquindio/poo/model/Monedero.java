@@ -1,9 +1,7 @@
 package co.edu.uniquindio.poo.model;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Monedero implements Transaccionable, Reporteable {
@@ -30,29 +28,33 @@ public class Monedero implements Transaccionable, Reporteable {
     configurarLimitesPorTipo();
   }
 
+  /**
+   * Configura los límites de retiro diario y saldo mínimo según el tipo de
+   * monedero
+   * Principal: 5M límite, 0 mínimo
+   * Ahorro: 2M límite, 50K mínimo
+   * Gastos Diarios: 3M límite, 0 mínimo
+   * Emergencia: 1M límite, 100K mínimo
+   * Inversión: 10M límite, 500K mínimo
+   */
   private void configurarLimitesPorTipo() {
     switch (tipo) {
-
       case PRINCIPAL -> {
         this.limiteRetiroDiario = 5_000_000.0;
         this.saldoMinimo = 0.0;
       }
-
       case AHORRO -> {
         this.limiteRetiroDiario = 2_000_000.0;
         this.saldoMinimo = 50_000.0;
       }
-
       case GASTOS_DIARIOS -> {
         this.limiteRetiroDiario = 3_000_000.0;
         this.saldoMinimo = 0.0;
       }
-
       case EMERGENCIA -> {
         this.limiteRetiroDiario = 1_000_000.0;
         this.saldoMinimo = 100_000.0;
       }
-
       case INVERSION -> {
         this.limiteRetiroDiario = 10_000_000.0;
         this.saldoMinimo = 500_000.0;
@@ -60,6 +62,14 @@ public class Monedero implements Transaccionable, Reporteable {
     }
   }
 
+  /**
+   * Realiza un depósito en el monedero
+   * Crea una transacción Deposito, la ejecuta y la registra
+   * 
+   * @param monto       Cantidad a depositar
+   * @param descripcion Descripción del depósito
+   * @return true si fue exitoso
+   */
   @Override
   public boolean depositar(double monto, String descripcion) {
     if (monto <= 0 || !activo) {
@@ -76,6 +86,14 @@ public class Monedero implements Transaccionable, Reporteable {
     return exitoso;
   }
 
+  /**
+   * Realiza un retiro del monedero
+   * Valida límites y saldo antes de crear la transacción
+   * 
+   * @param monto       Cantidad a retirar
+   * @param descripcion Descripción del retiro
+   * @return true si fue exitoso
+   */
   @Override
   public boolean retirar(double monto, String descripcion) {
     if (!puedeRetirar(monto)) {
@@ -92,6 +110,15 @@ public class Monedero implements Transaccionable, Reporteable {
     return exitoso;
   }
 
+  /**
+   * Realiza una transferencia a otro monedero
+   * Crea una transacción Transferencia con comisiones
+   * 
+   * @param destino     El monedero destino (debe ser Transaccionable)
+   * @param monto       Cantidad a transferir
+   * @param descripcion Descripción de la transferencia
+   * @return true si fue exitosa
+   */
   @Override
   public boolean transferir(Transaccionable destino, double monto, String descripcion) {
     if (!puedeRetirar(monto)) {
@@ -113,6 +140,13 @@ public class Monedero implements Transaccionable, Reporteable {
     return false;
   }
 
+  /**
+   * Valida si se puede realizar un retiro
+   * Verifica: monedero activo, monto positivo, saldo mínimo y límite diario
+   * 
+   * @param monto El monto a retirar
+   * @return true si se puede retirar
+   */
   private boolean puedeRetirar(double monto) {
     if (!activo || monto <= 0) {
       return false;
@@ -130,6 +164,12 @@ public class Monedero implements Transaccionable, Reporteable {
     return saldo >= monto;
   }
 
+  /**
+   * Calcula el total retirado en el día actual
+   * Suma retiros y transferencias completadas desde medianoche
+   * 
+   * @return Total retirado hoy
+   */
   public double calcularRetirosHoy() {
     LocalDateTime inicioDia = LocalDateTime.now().toLocalDate().atStartOfDay();
 
@@ -143,32 +183,67 @@ public class Monedero implements Transaccionable, Reporteable {
         .sum();
   }
 
+  /**
+   * Agrega saldo al monedero
+   * Solo permite montos positivos
+   * 
+   * @param monto Cantidad a agregar
+   */
   public void agregarSaldo(double monto) {
     if (monto > 0) {
       this.saldo += monto;
     }
   }
 
+  /**
+   * Resta saldo del monedero
+   * Solo permite montos positivos y si hay saldo suficiente
+   * 
+   * @param monto Cantidad a restar
+   */
   public void restarSaldo(double monto) {
     if (monto > 0 && saldo >= monto) {
       this.saldo -= monto;
     }
   }
 
+  /**
+   * Registra una transacción en el historial
+   * 
+   * @param transaccion La transacción a registrar
+   */
   private void registrarTransaccion(Transaccion transaccion) {
     historialTransacciones.add(transaccion);
   }
 
+  /**
+   * Obtiene todo el historial de transacciones
+   * 
+   * @return Lista con todas las transacciones
+   */
   public List<Transaccion> obtenerHistorial() {
     return new ArrayList<>(historialTransacciones);
   }
 
+  /**
+   * Filtra el historial por tipo de transacción
+   * 
+   * @param tipo El tipo a filtrar
+   * @return Lista de transacciones del tipo especificado
+   */
   public List<Transaccion> obtenerHistorialPorTipo(TipoTransaccion tipo) {
     return historialTransacciones.stream()
         .filter(t -> t.getTipo() == tipo)
         .collect(Collectors.toList());
   }
 
+  /**
+   * Obtiene transacciones en un rango de fechas
+   * 
+   * @param inicio Fecha/hora inicial
+   * @param fin    Fecha/hora final
+   * @return Lista de transacciones en el rango
+   */
   public List<Transaccion> obtenerHistorialEnRango(LocalDateTime inicio, LocalDateTime fin) {
     return historialTransacciones.stream()
         .filter(t -> !t.getFechaCreacion().isBefore(inicio) &&
@@ -176,6 +251,11 @@ public class Monedero implements Transaccionable, Reporteable {
         .collect(Collectors.toList());
   }
 
+  /**
+   * Genera un reporte resumido del monedero
+   * 
+   * @return String con tipo, nombre y saldo
+   */
   @Override
   public String generarReporte() {
     return String.format("%s %s - Saldo: %s",
@@ -184,6 +264,12 @@ public class Monedero implements Transaccionable, Reporteable {
         Cliente.formatearCOP(saldo));
   }
 
+  /**
+   * Genera un reporte detallado del monedero
+   * Incluye estadísticas de transacciones y saldos
+   * 
+   * @return String con reporte completo
+   */
   @Override
   public String generarReporteDetallado() {
     int totalTransacciones = historialTransacciones.size();
@@ -200,9 +286,9 @@ public class Monedero implements Transaccionable, Reporteable {
         .sum();
 
     return String.format("""
-        ═══════════════════════════════════
+
         REPORTE DE MONEDERO
-        ═══════════════════════════════════
+
         ID: %s
         Tipo: %s %s
         Propietario: %s
@@ -213,11 +299,9 @@ public class Monedero implements Transaccionable, Reporteable {
         Total Depositado: %s
         Total Retirado: %s
         Estado: %s
-        ═══════════════════════════════════
+
         """,
-        id,
-        tipo.getIcono(),
-        tipo.getNombre(),
+        id, tipo.getIcono(), tipo.getNombre(),
         propietario.getNombre(),
         Cliente.formatearCOP(saldo),
         Cliente.formatearCOP(saldoMinimo),
@@ -241,16 +325,8 @@ public class Monedero implements Transaccionable, Reporteable {
     return saldo;
   }
 
-  public void setSaldo(double saldo) {
-    this.saldo = saldo;
-  }
-
   public Cliente getPropietario() {
     return propietario;
-  }
-
-  public List<Transaccion> getHistorialTransacciones() {
-    return historialTransacciones;
   }
 
   public double getLimiteRetiroDiario() {
@@ -263,6 +339,14 @@ public class Monedero implements Transaccionable, Reporteable {
 
   public boolean isActivo() {
     return activo;
+  }
+
+  public List<Transaccion> getHistorialTransacciones() {
+    return historialTransacciones;
+  }
+
+  public void setSaldo(double saldo) {
+    this.saldo = saldo;
   }
 
   public void setActivo(boolean activo) {

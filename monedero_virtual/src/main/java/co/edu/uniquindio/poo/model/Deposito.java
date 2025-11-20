@@ -16,6 +16,12 @@ public class Deposito extends Transaccion {
     this.monederoDestino = destino;
   }
 
+  /**
+   * Ejecuta el depósito agregando el monto al monedero destino,
+   * acumulando puntos según el rango del cliente
+   * 
+   * @return true si el depósito se completó exitosamente, false si fue rechazado
+   */
   @Override
   public boolean ejecutar() {
     if (!esValida()) {
@@ -32,6 +38,12 @@ public class Deposito extends Transaccion {
     return true;
   }
 
+  /**
+   * Revierte un depósito completado, retirando el monto del monedero
+   * y descontando los puntos generados si es posible
+   * 
+   * @return true si la reversión fue exitosa, false si no hay saldo suficiente
+   */
   @Override
   public boolean revertir() {
     if (getEstado() != EstadoTransaccion.COMPLETADA) {
@@ -53,6 +65,12 @@ public class Deposito extends Transaccion {
     return false;
   }
 
+  /**
+   * Obtiene la lista de errores de validación específicos de un depósito,
+   * verificando la existencia y estado activo del monedero destino
+   * 
+   * @return Lista de mensajes de error encontrados
+   */
   @Override
   public List<String> obtenerErroresValidacion() {
     List<String> errores = super.obtenerErroresValidacion();
@@ -71,6 +89,12 @@ public class Deposito extends Transaccion {
     return monederoDestino;
   }
 
+  /**
+   * Genera un reporte detallado del depósito incluyendo
+   * información del monedero destino
+   * 
+   * @return String formateado con los detalles del depósito
+   */
   @Override
   public String generarReporteDetallado() {
     return super.generarReporteDetallado() +

@@ -4,24 +4,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import co.edu.uniquindio.poo.model.*;
 
-import co.edu.uniquindio.poo.model.Cliente;
-import co.edu.uniquindio.poo.model.SistemaMonedero;
-
-/**
- * Controlador de lógica para el Login
- * Universidad del Quindío
- */
 public class LoginController {
 
   private SistemaMonedero sistema;
   private Map<String, String> credenciales;
 
-  // Patrón para validar emails
   private static final Pattern EMAIL_PATTERN = Pattern.compile(
       "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
 
-  // Patrón para validar teléfonos colombianos
   private static final Pattern PHONE_PATTERN = Pattern.compile(
       "^3[0-9]{9}$");
 
@@ -32,10 +24,14 @@ public class LoginController {
   }
 
   /**
-   * Autenticar usuario con email y contraseña
+   * Autentica un usuario con email y contraseña
+   * Normaliza el email a minúsculas antes de buscar
+   * 
+   * @param email    El email del usuario
+   * @param password La contraseña del usuario
+   * @return Optional con el cliente si las credenciales son correctas
    */
   public Optional<Cliente> autenticar(String email, String password) {
-    // Validación de entrada
     if (email == null || email.trim().isEmpty()) {
       return Optional.empty();
     }
@@ -44,10 +40,8 @@ public class LoginController {
       return Optional.empty();
     }
 
-    // Normalizar email (convertir a minúsculas)
     email = email.trim().toLowerCase();
 
-    // Verificar credenciales
     if (!credenciales.containsKey(email)) {
       System.out.println("Login fallido: Email no encontrado - " + email);
       return Optional.empty();
@@ -58,7 +52,6 @@ public class LoginController {
       return Optional.empty();
     }
 
-    // Buscar cliente en el sistema
     Optional<Cliente> clienteOpt = sistema.buscarClientePorEmail(email);
 
     if (clienteOpt.isPresent()) {
@@ -69,10 +62,17 @@ public class LoginController {
   }
 
   /**
-   * Registrar nuevo cliente con validaciones completas
+   * Registra un nuevo cliente con validaciones completas
+   * Valida formato de email, teléfono colombiano y longitud de contraseña
+   * 
+   * @param nombre   Nombre completo (mínimo 3 caracteres)
+   * @param email    Email válido (único)
+   * @param telefono Teléfono celular colombiano (10 dígitos, empieza con 3)
+   * @param password Contraseña (entre 4 y 50 caracteres)
+   * @return El cliente registrado
+   * @throws IllegalArgumentException si alguna validación falla
    */
   public Cliente registrarCliente(String nombre, String email, String telefono, String password) {
-    // Validar nombre
     if (nombre == null || nombre.trim().isEmpty()) {
       throw new IllegalArgumentException("El nombre es requerido");
     }
@@ -81,7 +81,6 @@ public class LoginController {
       throw new IllegalArgumentException("El nombre debe tener al menos 3 caracteres");
     }
 
-    // Validar y normalizar email
     if (email == null || email.trim().isEmpty()) {
       throw new IllegalArgumentException("El email es requerido");
     }
@@ -92,7 +91,6 @@ public class LoginController {
       throw new IllegalArgumentException("El formato del email no es valido");
     }
 
-    // Validar teléfono
     if (telefono != null && !telefono.trim().isEmpty()) {
       String telefonoLimpio = telefono.trim().replaceAll("\\s+", "");
       if (!PHONE_PATTERN.matcher(telefonoLimpio).matches()) {
@@ -101,7 +99,6 @@ public class LoginController {
       }
     }
 
-    // Validar contraseña
     if (password == null || password.length() < 4) {
       throw new IllegalArgumentException("La contraseña debe tener al menos 4 caracteres");
     }
@@ -110,22 +107,25 @@ public class LoginController {
       throw new IllegalArgumentException("La contraseña no puede tener mas de 50 caracteres");
     }
 
-    // Verificar si el email ya existe
     if (credenciales.containsKey(email)) {
       throw new IllegalArgumentException("El email ya esta registrado");
     }
 
-    // Registrar cliente
     Cliente cliente = sistema.registrarCliente(nombre.trim(), email, telefono);
     credenciales.put(email, password);
 
     System.out.println("Cliente registrado exitosamente: " + cliente.getNombre());
-
     return cliente;
   }
 
   /**
-   * Cambiar contraseña de un usuario
+   * Cambia la contraseña de un usuario
+   * Valida que la contraseña actual sea correcta
+   * 
+   * @param email          Email del usuario
+   * @param passwordActual Contraseña actual
+   * @param passwordNueva  Nueva contraseña (mínimo 4 caracteres)
+   * @return true si el cambio fue exitoso
    */
   public boolean cambiarPassword(String email, String passwordActual, String passwordNueva) {
     email = email.trim().toLowerCase();
@@ -148,7 +148,10 @@ public class LoginController {
   }
 
   /**
-   * Verificar si un email ya está registrado
+   * Verifica si un email ya está registrado
+   * 
+   * @param email Email a verificar
+   * @return true si el email existe
    */
   public boolean emailExiste(String email) {
     if (email == null || email.trim().isEmpty()) {
@@ -158,56 +161,51 @@ public class LoginController {
   }
 
   /**
-   * Obtener el número total de usuarios registrados
+   * Obtiene el número total de usuarios registrados
+   * 
+   * @return Cantidad de usuarios
    */
   public int contarUsuariosRegistrados() {
     return credenciales.size();
   }
 
   /**
-   * Inicializar datos de prueba con montos realistas en COP
+   * Inicializa datos de prueba con 3 clientes y saldos iniciales
+   * Usuarios: juan, maria, pedro (@uniquindio.edu.co)
+   * Contraseña para todos: 1234
    */
   private void inicializarDatosPrueba() {
     try {
-      // Cliente 1 - Juan
       Cliente cliente1 = sistema.registrarCliente(
           "Juan Perez",
           "juan@uniquindio.edu.co",
           "3001234567");
       credenciales.put("juan@uniquindio.edu.co", "1234");
 
-      // Cliente 2 - María
       Cliente cliente2 = sistema.registrarCliente(
           "Maria Garcia",
           "maria@uniquindio.edu.co",
           "3007654321");
       credenciales.put("maria@uniquindio.edu.co", "1234");
 
-      // Cliente 3 - Pedro
       Cliente cliente3 = sistema.registrarCliente(
           "Pedro Lopez",
           "pedro@uniquindio.edu.co",
           "3009876543");
       credenciales.put("pedro@uniquindio.edu.co", "1234");
 
-      // Depósitos iniciales con montos realistas en COP
       sistema.realizarDeposito(cliente1,
-          co.edu.uniquindio.poo.model.TipoMonedero.PRINCIPAL,
-          2_000_000, "Deposito inicial"); // 2 millones
+          TipoMonedero.PRINCIPAL, 2_000_000, "Deposito inicial");
 
       sistema.realizarDeposito(cliente2,
-          co.edu.uniquindio.poo.model.TipoMonedero.PRINCIPAL,
-          3_500_000, "Deposito inicial"); // 3.5 millones
+          TipoMonedero.PRINCIPAL, 3_500_000, "Deposito inicial");
 
       sistema.realizarDeposito(cliente3,
-          co.edu.uniquindio.poo.model.TipoMonedero.PRINCIPAL,
-          5_000_000, "Deposito inicial"); // 5 millones
+          TipoMonedero.PRINCIPAL, 5_000_000, "Deposito inicial");
 
-      // Crear monederos adicionales para demostración
-      cliente2.crearMonedero(co.edu.uniquindio.poo.model.TipoMonedero.AHORRO);
+      cliente2.crearMonedero(TipoMonedero.AHORRO);
       sistema.realizarDeposito(cliente2,
-          co.edu.uniquindio.poo.model.TipoMonedero.AHORRO,
-          1_000_000, "Ahorro inicial");
+          TipoMonedero.AHORRO, 1_000_000, "Ahorro inicial");
 
       System.out.println("Datos de prueba cargados exitosamente");
       System.out.println("Usuarios disponibles:");
@@ -221,9 +219,6 @@ public class LoginController {
     }
   }
 
-  /**
-   * Obtener el sistema (útil para pruebas)
-   */
   public SistemaMonedero getSistema() {
     return sistema;
   }

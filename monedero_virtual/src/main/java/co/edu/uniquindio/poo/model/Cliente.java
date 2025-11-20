@@ -43,8 +43,15 @@ public class Cliente implements Puntuable, Notificable, Reporteable {
     crearMonedero(TipoMonedero.PRINCIPAL);
   }
 
+  /**
+   * Crea un nuevo monedero para el cliente
+   * Valida que no exista ya un monedero del mismo tipo
+   * 
+   * @param tipo El tipo de monedero a crear
+   * @return El monedero creado
+   * @throws IllegalStateException si ya existe un monedero de ese tipo
+   */
   public Monedero crearMonedero(TipoMonedero tipo) {
-
     Optional<Monedero> existente = monederos.stream()
         .filter(m -> m.getTipo() == tipo)
         .findFirst();
@@ -63,29 +70,56 @@ public class Cliente implements Puntuable, Notificable, Reporteable {
     return nuevoMonedero;
   }
 
+  /**
+   * Busca y retorna un monedero específico del cliente
+   * 
+   * @param tipo El tipo de monedero a buscar
+   * @return Optional con el monedero si existe
+   */
   public Optional<Monedero> obtenerMonedero(TipoMonedero tipo) {
     return monederos.stream()
         .filter(m -> m.getTipo() == tipo)
         .findFirst();
   }
 
+  /**
+   * Obtiene el monedero principal del cliente
+   * 
+   * @return El monedero principal
+   * @throws IllegalStateException si no existe el monedero principal
+   */
   public Monedero getMonederoPrincipal() {
     return obtenerMonedero(TipoMonedero.PRINCIPAL)
         .orElseThrow(() -> new IllegalStateException("No existe monedero principal"));
   }
 
+  /**
+   * Calcula la suma de saldos de todos los monederos del cliente
+   * 
+   * @return El saldo total en todos los monederos
+   */
   public double calcularSaldoTotal() {
     return monederos.stream()
         .mapToDouble(Monedero::getSaldo)
         .sum();
   }
 
+  /**
+   * Cuenta el total de transacciones realizadas en todos los monederos
+   * 
+   * @return Número total de transacciones
+   */
   public int calcularTotalTransacciones() {
     return monederos.stream()
         .mapToInt(m -> m.obtenerHistorial().size())
         .sum();
   }
 
+  /**
+   * Genera un DTO con el resumen del cliente para mostrar en reportes
+   * 
+   * @return ResumenClienteDTO con los datos principales
+   */
   public ResumenClienteDTO generarResumenDTO() {
     return new ResumenClienteDTO(
         this.nombre,
@@ -96,6 +130,12 @@ public class Cliente implements Puntuable, Notificable, Reporteable {
         calcularTotalTransacciones());
   }
 
+  /**
+   * Acumula puntos al cliente y actualiza su rango si corresponde
+   * Envía notificaciones si cambia de rango
+   * 
+   * @param puntos Cantidad de puntos a acumular (debe ser positivo)
+   */
   @Override
   public void acumularPuntos(int puntos) {
     if (puntos > 0) {
@@ -119,6 +159,13 @@ public class Cliente implements Puntuable, Notificable, Reporteable {
     }
   }
 
+  /**
+   * Canjea (resta) puntos del cliente si tiene suficientes
+   * Actualiza el rango después del canje
+   * 
+   * @param puntos Cantidad de puntos a canjear
+   * @return true si el canje fue exitoso, false si no tiene suficientes puntos
+   */
   @Override
   public boolean canjearPuntos(int puntos) {
     if (puntos > 0 && puntosAcumulados >= puntos) {
@@ -129,14 +176,24 @@ public class Cliente implements Puntuable, Notificable, Reporteable {
     return false;
   }
 
+  /**
+   * Calcula el rango del cliente basado en sus puntos acumulados
+   * 
+   * @return El rango correspondiente a los puntos actuales
+   */
   @Override
   public RangoCliente calcularRango() {
     return RangoCliente.obtenerRangoPorPuntos(puntosAcumulados);
   }
 
+  /**
+   * Envía una notificación al cliente con formato de hora y tipo
+   * 
+   * @param mensaje El mensaje de la notificación
+   * @param tipo    El tipo de notificación (define icono y descripción)
+   */
   @Override
   public void enviarNotificacion(String mensaje, TipoNotificacion tipo) {
-
     LocalDateTime ahora = LocalDateTime.now();
     String hora = String.format("%02d:%02d", ahora.getHour(), ahora.getMinute());
 
@@ -149,11 +206,21 @@ public class Cliente implements Puntuable, Notificable, Reporteable {
     notificaciones.add(notificacion);
   }
 
+  /**
+   * Obtiene todas las notificaciones del cliente
+   * 
+   * @return Lista con las notificaciones
+   */
   @Override
   public List<String> obtenerNotificaciones() {
     return new ArrayList<>(notificaciones);
   }
 
+  /**
+   * Marca una notificación como leída eliminándola de la lista
+   * 
+   * @param indice El índice de la notificación a marcar
+   */
   @Override
   public void marcarNotificacionComoLeida(int indice) {
     if (indice >= 0 && indice < notificaciones.size()) {
@@ -161,6 +228,10 @@ public class Cliente implements Puntuable, Notificable, Reporteable {
     }
   }
 
+  /**
+   * Verifica todos los monederos y envía alertas si el saldo está bajo
+   * Se considera saldo bajo cuando está cerca del mínimo + 100
+   */
   public void verificarSaldoBajo() {
     monederos.stream()
         .filter(m -> m.getSaldo() < m.getSaldoMinimo() + 100)
@@ -171,11 +242,21 @@ public class Cliente implements Puntuable, Notificable, Reporteable {
             TipoNotificacion.SALDO_BAJO));
   }
 
-
+  /**
+   * Formatea un monto en pesos colombianos con separadores de miles
+   * 
+   * @param monto El monto a formatear
+   * @return String con formato "$1,000 COP"
+   */
   public static String formatearCOP(double monto) {
     return String.format("$%,.0f COP", monto);
   }
 
+  /**
+   * Genera un reporte resumido de una línea del cliente
+   * 
+   * @return String con nombre, puntos y rango
+   */
   @Override
   public String generarReporte() {
     return String.format("%s - Puntos: %d - Rango: %s %s",
@@ -185,12 +266,18 @@ public class Cliente implements Puntuable, Notificable, Reporteable {
         rangoActual.getNombre());
   }
 
+  /**
+   * Genera un reporte completo y detallado del cliente
+   * Incluye todos los datos: ID, contacto, puntos, monederos, etc.
+   * 
+   * @return String con el reporte detallado formateado
+   */
   @Override
   public String generarReporteDetallado() {
     return String.format("""
-        ═══════════════════════════════════
+
         REPORTE DE CLIENTE
-        ═══════════════════════════════════
+
         ID: %s
         Nombre: %s
         Email: %s
@@ -202,7 +289,7 @@ public class Cliente implements Puntuable, Notificable, Reporteable {
         Transacciones Totales: %d
         Fecha Registro: %s
         Estado: %s
-        ═══════════════════════════════════
+
         """,
         id,
         nombre,
@@ -218,16 +305,24 @@ public class Cliente implements Puntuable, Notificable, Reporteable {
         activo ? "Activo" : "Inactivo");
   }
 
-  public List<CanjeBeneficio> getBeneficiosActivos() {
-    return new ArrayList<>(beneficiosActivos);
-  }
-
+  /**
+   * Verifica si el cliente tiene un beneficio activo de un tipo específico
+   * 
+   * @param tipoBeneficio El tipo de beneficio a buscar (nombre del enum)
+   * @return true si tiene ese beneficio activo y no ha sido completamente usado
+   */
   public boolean tieneBeneficioActivo(String tipoBeneficio) {
     return beneficiosActivos.stream()
         .anyMatch(c -> c.getBeneficio().getTipo().name().equals(tipoBeneficio)
             && !c.isAplicado());
   }
 
+  /**
+   * Obtiene un beneficio activo específico del cliente
+   * 
+   * @param tipoBeneficio El tipo de beneficio a buscar
+   * @return Optional con el CanjeBeneficio si existe y está activo
+   */
   public Optional<CanjeBeneficio> obtenerBeneficioActivo(String tipoBeneficio) {
     return beneficiosActivos.stream()
         .filter(c -> c.getBeneficio().getTipo().name().equals(tipoBeneficio)
@@ -235,6 +330,16 @@ public class Cliente implements Puntuable, Notificable, Reporteable {
         .findFirst();
   }
 
+  /**
+   * Agrega un beneficio canjeado a la lista de beneficios activos del cliente
+   * 
+   * @param canje El canje de beneficio a agregar
+   */
+  public void agregarBeneficioActivo(CanjeBeneficio canje) {
+    this.beneficiosActivos.add(canje);
+  }
+
+  // Getters básicos
   public String getId() {
     return id;
   }
@@ -256,18 +361,6 @@ public class Cliente implements Puntuable, Notificable, Reporteable {
     return puntosAcumulados;
   }
 
-  public void setPuntosAcumulados(int puntosAcumulados) {
-    this.puntosAcumulados = puntosAcumulados;
-  }
-
-  public void setRangoActual(RangoCliente rangoActual) {
-    this.rangoActual = rangoActual;
-  }
-
-  public List<String> getNotificaciones() {
-    return notificaciones;
-  }
-
   public RangoCliente getRangoActual() {
     return rangoActual;
   }
@@ -284,6 +377,15 @@ public class Cliente implements Puntuable, Notificable, Reporteable {
     return activo;
   }
 
+  public List<CanjeBeneficio> getBeneficiosActivos() {
+    return new ArrayList<>(beneficiosActivos);
+  }
+
+  public List<String> getNotificaciones() {
+    return notificaciones;
+  }
+
+  // Setters básicos
   public void setNombre(String nombre) {
     this.nombre = nombre;
   }
@@ -300,16 +402,20 @@ public class Cliente implements Puntuable, Notificable, Reporteable {
     this.activo = activo;
   }
 
-  @Override
-  public String toString() {
-    return generarReporte();
+  public void setPuntosAcumulados(int puntosAcumulados) {
+    this.puntosAcumulados = puntosAcumulados;
+  }
+
+  public void setRangoActual(RangoCliente rangoActual) {
+    this.rangoActual = rangoActual;
   }
 
   public void setBeneficiosActivos(List<CanjeBeneficio> beneficiosActivos) {
     this.beneficiosActivos = beneficiosActivos;
   }
 
-  public void agregarBeneficioActivo(CanjeBeneficio canje) {
-    this.beneficiosActivos.add(canje);
+  @Override
+  public String toString() {
+    return generarReporte();
   }
 }

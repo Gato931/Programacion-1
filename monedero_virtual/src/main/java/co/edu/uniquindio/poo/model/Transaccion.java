@@ -1,9 +1,7 @@
 package co.edu.uniquindio.poo.model;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public abstract class Transaccion implements Validable {
 
@@ -30,42 +28,78 @@ public abstract class Transaccion implements Validable {
     this.puntosGenerados = 0;
   }
 
+  /**
+   * Método abstracto que cada tipo de transacción debe implementar
+   * Ejecuta la lógica específica de la transacción (depósito, retiro,
+   * transferencia)
+   * 
+   * @return true si la ejecución fue exitosa
+   */
   public abstract boolean ejecutar();
 
+  /**
+   * Método abstracto para revertir una transacción completada
+   * Devuelve el dinero y resta los puntos generados
+   * 
+   * @return true si la reversión fue exitosa
+   */
   public abstract boolean revertir();
 
+  /**
+   * Calcula los puntos base que genera esta transacción
+   * Usa la fórmula: (monto / 10.000) * puntos_por_tipo
+   * Depósito: 1 pto c/10K, Retiro: 2 pts c/10K, Transferencia: 3 pts c/10K
+   * 
+   * @return Puntos base sin aplicar bonus de rango
+   */
   public int calcularPuntosBase() {
     return (int) (monto / 10_000.0) * tipo.getPuntosPor10000();
   }
 
+  /**
+   * Aplica el bonus de puntos según el rango del cliente
+   * Los puntos finales = puntos_base * (1 + bonus_rango)
+   * Ejemplo: Oro tiene 10% bonus, entonces 100 pts → 110 pts
+   * 
+   * @param rango El rango del cliente para calcular bonus
+   */
   public void aplicarBonusRango(RangoCliente rango) {
     int puntosBase = calcularPuntosBase();
     double bonus = rango.getBonusPuntos();
     this.puntosGenerados = (int) (puntosBase * (1 + bonus));
   }
 
+  /**
+   * Marca la transacción como completada y registra la hora de ejecución
+   */
   protected void completar() {
     this.estado = EstadoTransaccion.COMPLETADA;
     this.fechaEjecucion = LocalDateTime.now();
   }
 
-  public void setDescripcion(String descripcion) {
-    this.descripcion = descripcion;
-  }
-
-  public void setFechaEjecucion(LocalDateTime fechaEjecucion) {
-    this.fechaEjecucion = fechaEjecucion;
-  }
-
+  /**
+   * Marca la transacción como rechazada
+   */
   protected void rechazar() {
     this.estado = EstadoTransaccion.RECHAZADA;
   }
 
+  /**
+   * Verifica si la transacción es válida
+   * 
+   * @return true si no tiene errores de validación
+   */
   @Override
   public boolean esValida() {
     return obtenerErroresValidacion().isEmpty();
   }
 
+  /**
+   * Obtiene la lista de errores de validación
+   * Valida monto positivo y tipo no nulo
+   * 
+   * @return Lista de mensajes de error
+   */
   @Override
   public List<String> obtenerErroresValidacion() {
     List<String> errores = new ArrayList<>();
@@ -80,20 +114,28 @@ public abstract class Transaccion implements Validable {
     return errores;
   }
 
+  /**
+   * Genera un resumen corto de la transacción
+   * 
+   * @return String con ID, tipo, monto y estado
+   */
   public String generarResumen() {
     return String.format("[%s] %s - $%.2f - %s %s",
-        id,
-        tipo.getDescripcion(),
-        monto,
-        estado.getIcono(),
-        estado.getDescripcion());
+        id, tipo.getDescripcion(), monto,
+        estado.getIcono(), estado.getDescripcion());
   }
 
+  /**
+   * Genera un reporte detallado de la transacción
+   * Incluye todos los campos: ID, tipo, monto, fechas, puntos, etc.
+   * 
+   * @return String con reporte completo formateado
+   */
   public String generarReporteDetallado() {
     return String.format("""
-        ═══════════════════════════════════
+
         DETALLE DE TRANSACCIÓN
-        ═══════════════════════════════════
+
         ID: %s
         Tipo: %s
         Monto: $%.2f
@@ -102,15 +144,11 @@ public abstract class Transaccion implements Validable {
         Fecha Creación: %s
         Fecha Ejecución: %s
         Puntos Generados: %d
-        ═══════════════════════════════════
+
         """,
-        id,
-        tipo.getDescripcion(),
-        monto,
-        estado.getIcono(),
-        estado.getDescripcion(),
-        descripcion,
-        fechaCreacion,
+        id, tipo.getDescripcion(), monto,
+        estado.getIcono(), estado.getDescripcion(),
+        descripcion, fechaCreacion,
         fechaEjecucion != null ? fechaEjecucion : "Pendiente",
         puntosGenerados);
   }
@@ -153,6 +191,14 @@ public abstract class Transaccion implements Validable {
 
   protected void setPuntosGenerados(int puntos) {
     this.puntosGenerados = puntos;
+  }
+
+  public void setDescripcion(String descripcion) {
+    this.descripcion = descripcion;
+  }
+
+  public void setFechaEjecucion(LocalDateTime fechaEjecucion) {
+    this.fechaEjecucion = fechaEjecucion;
   }
 
   @Override

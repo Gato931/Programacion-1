@@ -28,6 +28,12 @@ public class Transferencia extends Transaccion {
     this.comision = calcularComision();
   }
 
+  /**
+   * Calcula la comisión de la transferencia aplicando descuentos por rango
+   * y beneficios activos del cliente (sin cargos o descuento en comisiones)
+   * 
+   * @return El monto de la comisión después de aplicar todos los descuentos
+   */
   private double calcularComision() {
     double comisionBase = getMonto() * 0.01;
 
@@ -80,6 +86,15 @@ public class Transferencia extends Transaccion {
     return comision;
   }
 
+  /**
+   * Ejecuta la transferencia entre monederos, descontando el monto más la
+   * comisión
+   * del origen y acreditando solo el monto al destino. Acumula puntos y envía
+   * notificaciones.
+   * 
+   * @return true si la transferencia se completó exitosamente, false si fue
+   *         rechazada
+   */
   @Override
   public boolean ejecutar() {
     if (!esValida()) {
@@ -117,6 +132,13 @@ public class Transferencia extends Transaccion {
     return false;
   }
 
+  /**
+   * Revierte una transferencia completada, devolviendo el monto y la comisión al
+   * origen
+   * y descontando los puntos generados si es posible
+   * 
+   * @return true si la reversión fue exitosa, false en caso contrario
+   */
   @Override
   public boolean revertir() {
     if (getEstado() != EstadoTransaccion.COMPLETADA) {
@@ -139,6 +161,12 @@ public class Transferencia extends Transaccion {
     return false;
   }
 
+  /**
+   * Obtiene la lista de errores de validación específicos de una transferencia,
+   * incluyendo validaciones de monederos, estado activo y saldo suficiente
+   * 
+   * @return Lista de mensajes de error encontrados
+   */
   @Override
   public List<String> obtenerErroresValidacion() {
     List<String> errores = super.obtenerErroresValidacion();
@@ -167,6 +195,13 @@ public class Transferencia extends Transaccion {
     return errores;
   }
 
+  /**
+   * Valida que un monedero exista y esté activo
+   * 
+   * @param monedero       El monedero a validar
+   * @param nombreMonedero Nombre descriptivo del monedero para mensajes de error
+   * @param errores        Lista donde se agregarán los errores encontrados
+   */
   protected void validarMonedero(Monedero monedero, String nombreMonedero, List<String> errores) {
     if (monedero == null) {
       errores.add("El monedero " + nombreMonedero + " es requerido");
@@ -175,6 +210,13 @@ public class Transferencia extends Transaccion {
     }
   }
 
+  /**
+   * Valida que un monedero tenga saldo suficiente para realizar una operación
+   * 
+   * @param monedero       El monedero a validar
+   * @param montoRequerido Monto mínimo necesario
+   * @param errores        Lista donde se agregarán los errores encontrados
+   */
   protected void validarSaldoSuficiente(Monedero monedero, double montoRequerido, List<String> errores) {
     if (monedero != null && monedero.getSaldo() < montoRequerido) {
       errores.add(String.format("Saldo insuficiente. Disponible: %s, Requerido: %s",
@@ -183,18 +225,12 @@ public class Transferencia extends Transaccion {
     }
   }
 
-  public Monedero getMonederoOrigen() {
-    return monederoOrigen;
-  }
-
-  public Monedero getMonederoDestino() {
-    return monederoDestino;
-  }
-
-  public double getComision() {
-    return comision;
-  }
-
+  /**
+   * Genera un reporte detallado de la transferencia incluyendo información
+   * de los monederos origen y destino, comisión y monto total
+   * 
+   * @return String formateado con todos los detalles de la transferencia
+   */
   @Override
   public String generarReporteDetallado() {
     return super.generarReporteDetallado() +
@@ -210,6 +246,18 @@ public class Transferencia extends Transaccion {
             monederoDestino.getPropietario().getNombre(),
             comision,
             getMonto() + comision);
+  }
+
+  public Monedero getMonederoOrigen() {
+    return monederoOrigen;
+  }
+
+  public Monedero getMonederoDestino() {
+    return monederoDestino;
+  }
+
+  public double getComision() {
+    return comision;
   }
 
   public void setComision(double comision) {

@@ -1,6 +1,5 @@
 co\edu\uniquindio\poo\model\Deposito.class
 co\edu\uniquindio\poo\model\SistemaMonedero.class
-co\edu\uniquindio\poo\model\PatronGastoDTO.class
 co\edu\uniquindio\poo\model\TransaccionProgramada.class
 co\edu\uniquindio\poo\model\TipoTransaccion.class
 co\edu\uniquindio\poo\model\CanjeBeneficio$1.class
@@ -35,8 +34,6 @@ co\edu\uniquindio\poo\model\Retiro.class
 co\edu\uniquindio\poo\controller\TransaccionController.class
 co\edu\uniquindio\poo\model\Notificable.class
 co\edu\uniquindio\poo\model\SistemaMonedero$1.class
-co\edu\uniquindio\poo\app\Demo.class
 co\edu\uniquindio\poo\model\Reporteable.class
 co\edu\uniquindio\poo\model\Transaccion.class
 co\edu\uniquindio\poo\model\Transaccionable.class
-co\edu\uniquindio\poo\model\NotificacionDTO.class

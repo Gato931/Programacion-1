@@ -40,10 +40,22 @@ public class Beneficio implements Reporteable {
     this.activo = true;
   }
 
+  /**
+   * Verifica si el cliente puede canjear este beneficio
+   * según sus puntos acumulados y el estado del beneficio
+   * 
+   * @param cliente El cliente a evaluar
+   * @return true si el cliente puede canjear el beneficio
+   */
   public boolean puedeSerCanjeado(Cliente cliente) {
     return activo && cliente.getPuntosAcumulados() >= puntosRequeridos;
   }
 
+  /**
+   * Genera un reporte resumido del beneficio con nombre, puntos y estado
+   * 
+   * @return String formateado con información básica
+   */
   @Override
   public String generarReporte() {
     return String.format("%s - %d puntos - %s",
@@ -52,12 +64,17 @@ public class Beneficio implements Reporteable {
         activo ? "Activo" : "Inactivo");
   }
 
+  /**
+   * Genera un reporte detallado del beneficio con toda la información disponible
+   * 
+   * @return String formateado con información completa del beneficio
+   */
   @Override
   public String generarReporteDetallado() {
     return String.format("""
-        ═══════════════════════════════════
+
         BENEFICIO
-        ═══════════════════════════════════
+
         ID: %s
         Nombre: %s
         Descripción: %s
@@ -65,7 +82,7 @@ public class Beneficio implements Reporteable {
         Puntos Requeridos: %d
         Valor: %.2f
         Estado: %s
-        ═══════════════════════════════════
+
         """,
         id, nombre, descripcion,
         tipo.getDescripcion(),

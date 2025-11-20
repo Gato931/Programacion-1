@@ -18,6 +18,10 @@ public class SistemaPuntos {
     inicializarBeneficios();
   }
 
+  /**
+   * Inicializa los beneficios predefinidos del sistema según la especificación:
+   * descuento en comisiones, mes sin cargos y bono de saldo
+   */
   private void inicializarBeneficios() {
 
     beneficiosDisponibles.add(new Beneficio(
@@ -42,18 +46,38 @@ public class SistemaPuntos {
         50000.0));
   }
 
+  /**
+   * Obtiene todos los beneficios activos disponibles en el sistema
+   * 
+   * @return Lista de beneficios que están activos
+   */
   public List<Beneficio> obtenerBeneficiosDisponibles() {
     return beneficiosDisponibles.stream()
         .filter(Beneficio::isActivo)
         .collect(Collectors.toList());
   }
 
+  /**
+   * Obtiene los beneficios que el cliente puede canjear según sus puntos
+   * acumulados
+   * 
+   * @param cliente El cliente a evaluar
+   * @return Lista de beneficios disponibles para canje
+   */
   public List<Beneficio> obtenerBeneficiosCanjeables(Cliente cliente) {
     return beneficiosDisponibles.stream()
         .filter(b -> b.puedeSerCanjeado(cliente))
         .collect(Collectors.toList());
   }
 
+  /**
+   * Canjea un beneficio por puntos, descontando los puntos del cliente,
+   * aplicando el beneficio y registrando el canje
+   * 
+   * @param cliente     El cliente que canjea el beneficio
+   * @param idBeneficio ID del beneficio a canjear
+   * @return true si el canje fue exitoso, false en caso contrario
+   */
   public boolean canjearBeneficio(Cliente cliente, String idBeneficio) {
     Optional<Beneficio> beneficioOpt = beneficiosDisponibles.stream()
         .filter(b -> b.getId().equals(idBeneficio))
@@ -90,6 +114,14 @@ public class SistemaPuntos {
     return false;
   }
 
+  /**
+   * Aplica los efectos del beneficio canjeado según su tipo:
+   * bono inmediato, puntos extra o activación de descuentos
+   * 
+   * @param cliente   El cliente que recibe el beneficio
+   * @param beneficio El beneficio a aplicar
+   * @param canje     El registro del canje
+   */
   private void aplicarBeneficio(Cliente cliente, Beneficio beneficio,
       CanjeBeneficio canje) {
     switch (beneficio.getTipo()) {
@@ -116,10 +148,21 @@ public class SistemaPuntos {
     }
   }
 
+  /**
+   * Obtiene el historial de canjes de beneficios de un cliente
+   * 
+   * @param cliente El cliente a consultar
+   * @return Lista de canjes realizados por el cliente
+   */
   public List<CanjeBeneficio> obtenerCanjesCliente(Cliente cliente) {
     return canjesClientes.getOrDefault(cliente, new ArrayList<>());
   }
 
+  /**
+   * Agrega un nuevo beneficio al sistema
+   * 
+   * @param beneficio El beneficio a agregar
+   */
   public void agregarBeneficio(Beneficio beneficio) {
     beneficiosDisponibles.add(beneficio);
   }
@@ -132,17 +175,22 @@ public class SistemaPuntos {
     return canjesClientes;
   }
 
+  /**
+   * Genera un reporte formateado con todos los beneficios disponibles
+   * 
+   * @return String con el listado de beneficios activos
+   */
   public String generarReporteBeneficios() {
     StringBuilder reporte = new StringBuilder();
-    reporte.append("═══════════════════════════════════\n");
+    reporte.append("\n");
     reporte.append("BENEFICIOS DISPONIBLES\n");
-    reporte.append("═══════════════════════════════════\n");
+    reporte.append("\n");
 
     beneficiosDisponibles.stream()
         .filter(Beneficio::isActivo)
         .forEach(b -> reporte.append(b.generarReporte()).append("\n"));
 
-    reporte.append("═══════════════════════════════════\n");
+    reporte.append("\n");
     return reporte.toString();
   }
 }

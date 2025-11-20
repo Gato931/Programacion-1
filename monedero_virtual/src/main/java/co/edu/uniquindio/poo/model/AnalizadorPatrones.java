@@ -46,11 +46,17 @@ public class AnalizadorPatrones {
               Collectors.summingDouble(Transaccion::getMonto)));
     }
 
+    /**
+     * Genera un reporte formateado con todas las estadísticas de gasto
+     * incluyendo totales, promedios y desglose por tipo de transacción
+     * 
+     * @return String con el reporte completo de estadísticas
+     */
     public String generarReporte() {
       return String.format("""
-          ═══════════════════════════════════
+
           ESTADISTICAS DE GASTO
-          ═══════════════════════════════════
+
           Total Gastado: $%,.0f COP
           Promedio por Transaccion: $%,.0f COP
           Cantidad de Transacciones: %d
@@ -59,7 +65,7 @@ public class AnalizadorPatrones {
 
           Gasto por Tipo:
           %s
-          ═══════════════════════════════════
+
           """,
           totalGastado,
           promedioTransaccion,
@@ -69,6 +75,11 @@ public class AnalizadorPatrones {
           formatearGastoPorTipo());
     }
 
+    /**
+     * Formatea el mapa de gastos por tipo de transacción en un string legible
+     * 
+     * @return String con el desglose de gastos por tipo
+     */
     private String formatearGastoPorTipo() {
       return gastoPorTipo.entrySet().stream()
           .map(e -> String.format("  - %s: $%,.0f COP",
@@ -93,6 +104,13 @@ public class AnalizadorPatrones {
     }
   }
 
+  /**
+   * Analiza todos los gastos de un cliente a través de sus monederos
+   * y genera estadísticas completas
+   * 
+   * @param cliente El cliente a analizar
+   * @return Objeto EstadisticasGasto con todos los datos calculados
+   */
   public static EstadisticasGasto analizarGastos(Cliente cliente) {
     List<Transaccion> todasTransacciones = new ArrayList<>();
 
@@ -103,6 +121,15 @@ public class AnalizadorPatrones {
     return new EstadisticasGasto(todasTransacciones);
   }
 
+  /**
+   * Analiza los gastos de un cliente en un rango de fechas específico,
+   * agrupándolos por mes
+   * 
+   * @param cliente El cliente a analizar
+   * @param inicio  Fecha inicial del período
+   * @param fin     Fecha final del período
+   * @return Mapa con gastos totales por mes
+   */
   public static Map<String, Double> analizarGastosPorPeriodo(
       Cliente cliente, LocalDateTime inicio, LocalDateTime fin) {
 
@@ -122,6 +149,13 @@ public class AnalizadorPatrones {
     return gastosPorMes;
   }
 
+  /**
+   * Detecta patrones de gasto inusuales como transacciones muy altas
+   * o actividad excesiva en 24 horas
+   * 
+   * @param cliente El cliente a analizar
+   * @return Lista de alertas detectadas (vacía si no hay patrones inusuales)
+   */
   public static List<String> detectarPatronesInusuales(Cliente cliente) {
     List<String> alertas = new ArrayList<>();
     EstadisticasGasto stats = analizarGastos(cliente);

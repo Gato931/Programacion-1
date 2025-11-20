@@ -20,6 +20,12 @@ public enum RangoCliente {
     this.bonusPuntos = bonus;
   }
 
+  /**
+   * Obtiene el rango correspondiente según los puntos acumulados del cliente
+   * 
+   * @param puntos Cantidad de puntos acumulados
+   * @return El RangoCliente correspondiente (BRONCE si no coincide con ninguno)
+   */
   public static RangoCliente obtenerRangoPorPuntos(int puntos) {
     for (RangoCliente rango : values()) {
       if (puntos >= rango.puntosMinimos && puntos <= rango.puntosMaximos) {
@@ -49,6 +55,11 @@ public enum RangoCliente {
     return bonusPuntos;
   }
 
+  /**
+   * Obtiene el icono textual representativo del rango
+   * 
+   * @return String con el icono del rango entre corchetes
+   */
   public String getIcono() {
     return switch (this) {
       case BRONCE -> "[BRONCE]";

@@ -25,6 +25,10 @@ public class CanjeBeneficio {
     configurarBeneficio();
   }
 
+  /**
+   * Configura la duración y límites de uso del beneficio según su tipo
+   * (descuentos tienen 10 usos, mes sin cargos dura 30 días, etc.)
+   */
   private void configurarBeneficio() {
     switch (beneficio.getTipo()) {
       case DESCUENTO_COMISION -> {
@@ -50,6 +54,12 @@ public class CanjeBeneficio {
     }
   }
 
+  /**
+   * Verifica si el beneficio puede ser usado actualmente,
+   * considerando expiración, usos máximos y estado aplicado
+   * 
+   * @return true si el beneficio está disponible para usar
+   */
   public boolean puedeUsarse() {
     if (aplicado && beneficio.getTipo() == Beneficio.TipoBeneficio.BONO_SALDO) {
       return false;
@@ -66,6 +76,10 @@ public class CanjeBeneficio {
     return true;
   }
 
+  /**
+   * Registra un uso del beneficio, incrementando el contador
+   * y marcándolo como aplicado si se alcanzó el límite de usos
+   */
   public void usar() {
     this.vecesUsado++;
     if (vecesUsado >= usosMaximos) {
@@ -73,6 +87,12 @@ public class CanjeBeneficio {
     }
   }
 
+  /**
+   * Obtiene el estado actual del beneficio con información
+   * de días restantes y usos disponibles
+   * 
+   * @return String descriptivo del estado del beneficio
+   */
   public String obtenerEstado() {
     if (!puedeUsarse()) {
       return "Expirado/Agotado";

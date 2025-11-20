@@ -6,6 +6,12 @@ public record BeneficioDTO(
     String descripcion,
     int puntosRequeridos,
     boolean disponible) {
+  /**
+   * Genera una descripción completa del beneficio incluyendo nombre,
+   * puntos requeridos y disponibilidad
+   * 
+   * @return String formateado con la descripción completa
+   */
   public String getDescripcionCompleta() {
     return String.format("%s - %d puntos%s",
         nombre,

@@ -35,10 +35,23 @@ public class TransaccionProgramada {
     this.historialEjecuciones = new ArrayList<>();
   }
 
+  /**
+   * Verifica si la transacción programada debe ejecutarse ahora
+   * según su fecha de ejecución y estado activo
+   * 
+   * @return true si la transacción debe ejecutarse
+   */
   public boolean debeEjecutarse() {
     return activa && LocalDateTime.now().isAfter(proximaEjecucion);
   }
 
+  /**
+   * Ejecuta la transacción programada creando la transacción correspondiente
+   * según su tipo (depósito, retiro o transferencia) y la registra en el
+   * historial
+   * 
+   * @return Optional con la transacción ejecutada, o vacío si no se ejecutó
+   */
   public Optional<Transaccion> ejecutar() {
     if (!debeEjecutarse()) {
       return Optional.empty();
@@ -77,6 +90,12 @@ public class TransaccionProgramada {
     return Optional.empty();
   }
 
+  /**
+   * Calcula la próxima fecha de ejecución según la periodicidad configurada
+   * (diaria, semanal, mensual, etc.)
+   * 
+   * @return LocalDateTime con la próxima fecha de ejecución
+   */
   public LocalDateTime calcularProximaEjecucion() {
     return switch (periodicidad) {
       case DIARIA -> proximaEjecucion.plusDays(1);

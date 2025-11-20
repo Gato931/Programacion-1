@@ -34,7 +34,9 @@
         style="-fx-background-color: #3498db; -fx-text-fill: white;" prefWidth="150" />
       <Button text="Ver Reporte" onAction="#handleVerReporte"
         style="-fx-background-color: #3498db; -fx-text-fill: white;" prefWidth="150" />
-      <Button text="Análisis de Gastos" onAction="#handleVerAnalisisGastos"
+      <Button text="Analisis de Gastos" onAction="#handleVerAnalisisGastos"
+        style="-fx-background-color: #3498db; -fx-text-fill: white;" prefWidth="150" />
+      <Button text="Programar Transaccion" onAction="#handleProgramarTransaccion"
         style="-fx-background-color: #3498db; -fx-text-fill: white;" prefWidth="150" />
     </VBox>
   </left>
@@ -95,6 +97,9 @@
         </Tab>
         <Tab text="Contactos">
           <ListView fx:id="contactosListView" style="-fx-font-size: 13px;" />
+        </Tab>
+        <Tab text="Programadas">
+          <ListView fx:id="programadasListView" style="-fx-font-size: 13px;" />
         </Tab>
       </TabPane>
     </VBox>

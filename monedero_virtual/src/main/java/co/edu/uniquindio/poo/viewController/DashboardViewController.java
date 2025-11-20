@@ -47,29 +47,52 @@ public class DashboardViewController {
   private ComboBox<String> monederoDestinoCombo;
   @FXML
   private Button ejecutarButton;
+  @FXML
+  private ListView<String> programadasListView;
 
   private Cliente clienteActual;
   private TransaccionController transaccionController;
   private ScheduledExecutorService scheduler;
+  private SistemaMonedero sistema;
 
+  /**
+   * Formatea un monto en pesos colombianos con separadores de miles
+   * 
+   * @param monto El monto a formatear
+   * @return String formateado como "$XXX COP"
+   */
   private String formatearCOP(double monto) {
     return String.format("$%,.0f COP", monto);
   }
 
+  /**
+   * Inicializa el controlador del dashboard, configurando los ComboBox
+   * e iniciando el procesador automático de transacciones programadas
+   */
   @FXML
   public void initialize() {
     System.out.println("Dashboard inicializado");
     transaccionController = new TransaccionController();
+    sistema = SistemaMonedero.getInstance();
     configurarComboBoxes();
     iniciarProcesadorTransacciones();
   }
 
+  /**
+   * Establece el cliente actual y carga todos sus datos en la interfaz
+   * 
+   * @param cliente El cliente que ha iniciado sesión
+   */
   public void setCliente(Cliente cliente) {
     this.clienteActual = cliente;
     System.out.println("Cliente configurado: " + cliente.getNombre());
     cargarDatosCliente();
   }
 
+  /**
+   * Configura los ComboBox de tipos de transacción y monederos,
+   * estableciendo sus valores por defecto y visibilidad condicional
+   */
   private void configurarComboBoxes() {
     tipoTransaccionCombo.setItems(FXCollections.observableArrayList(
         "Deposito", "Retiro", "Transferencia"));
@@ -94,6 +117,11 @@ public class DashboardViewController {
     monederoDestinoCombo.setVisible(false);
   }
 
+  /**
+   * Carga y actualiza todos los datos del cliente en la interfaz:
+   * nombre, rango, puntos, saldo, monederos, transacciones, notificaciones y
+   * contactos
+   */
   private void cargarDatosCliente() {
     nombreLabel.setText(clienteActual.getNombre());
     rangoLabel.setText(clienteActual.getRangoActual().getNombre());
@@ -104,14 +132,23 @@ public class DashboardViewController {
     cargarTransacciones();
     cargarNotificaciones();
     cargarContactos();
+    cargarTransaccionesProgramadas();
   }
 
+  /**
+   * Carga la lista de monederos del cliente con sus saldos
+   * en el ListView correspondiente
+   */
   private void cargarMonederos() {
     monederosListView.getItems().clear();
     clienteActual.getMonederos().forEach(m -> monederosListView.getItems().add(
         m.getTipo().getNombre() + ": " + formatearCOP(m.getSaldo())));
   }
 
+  /**
+   * Carga las últimas 15 transacciones del cliente usando TransaccionDTO,
+   * ordenadas de más reciente a más antigua
+   */
   private void cargarTransacciones() {
     transaccionesListView.getItems().clear();
 
@@ -140,6 +177,10 @@ public class DashboardViewController {
         }));
   }
 
+  /**
+   * Carga las últimas 15 notificaciones del cliente en el ListView,
+   * haciendo scroll automático a la más reciente
+   */
   private void cargarNotificaciones() {
     notificacionesListView.getItems().clear();
     List<String> notificaciones = clienteActual.obtenerNotificaciones();
@@ -158,6 +199,11 @@ public class DashboardViewController {
     }
   }
 
+  /**
+   * Carga la lista de todos los clientes registrados (excepto el actual)
+   * con su información básica y permite autocompletar el destinatario con doble
+   * clic
+   */
   private void cargarContactos() {
     contactosListView.getItems().clear();
 
@@ -202,6 +248,11 @@ public class DashboardViewController {
     });
   }
 
+  /**
+   * Muestra un diálogo de información al usuario
+   * 
+   * @param mensaje El mensaje a mostrar
+   */
   private void mostrarInfo(String mensaje) {
     Alert alert = new Alert(AlertType.INFORMATION);
     alert.setTitle("Informacion");
@@ -209,6 +260,11 @@ public class DashboardViewController {
     alert.setContentText(mensaje);
     alert.showAndWait();
   }
+
+  /**
+   * Maneja el evento de ejecutar una transacción, validando el monto
+   * y delegando según el tipo seleccionado (depósito, retiro o transferencia)
+   */
 
   @FXML
   private void handleEjecutarTransaccion() {
@@ -255,6 +311,13 @@ public class DashboardViewController {
     }
   }
 
+  /**
+   * Realiza un depósito en el monedero especificado del cliente actual
+   * 
+   * @param tipo        Tipo de monedero donde se realizará el depósito
+   * @param monto       Cantidad a depositar
+   * @param descripcion Descripción opcional de la transacción
+   */
   private void realizarDeposito(TipoMonedero tipo, double monto, String descripcion) {
     if (descripcion.isEmpty()) {
       descripcion = "Deposito en " + tipo.getNombre();
@@ -273,6 +336,14 @@ public class DashboardViewController {
     }
   }
 
+  /**
+   * Realiza un retiro del monedero especificado, validando saldo suficiente,
+   * saldo mínimo y límite de retiro diario
+   * 
+   * @param tipo        Tipo de monedero desde donde se realizará el retiro
+   * @param monto       Cantidad a retirar
+   * @param descripcion Descripción opcional de la transacción
+   */
   private void realizarRetiro(TipoMonedero tipo, double monto, String descripcion) {
     if (descripcion.isEmpty()) {
       descripcion = "Retiro de " + tipo.getNombre();
@@ -337,6 +408,13 @@ public class DashboardViewController {
     }
   }
 
+  /**
+   * Calcula el total de retiros y transferencias realizados hoy
+   * desde un monedero específico
+   * 
+   * @param monedero El monedero a analizar
+   * @return Monto total retirado en el día actual
+   */
   private double calcularRetirosHoy(Monedero monedero) {
     LocalDateTime inicioDia = LocalDateTime.now().toLocalDate().atStartOfDay();
 
@@ -350,6 +428,14 @@ public class DashboardViewController {
         .sum();
   }
 
+  /**
+   * Realiza una transferencia a otro cliente, calculando comisiones,
+   * aplicando beneficios activos y solicitando confirmación al usuario
+   * 
+   * @param monederoOrigen Tipo de monedero origen
+   * @param monto          Cantidad a transferir
+   * @param descripcion    Descripción opcional de la transacción
+   */
   private void realizarTransferencia(TipoMonedero monederoOrigen, double monto, String descripcion) {
     String emailDestino = emailDestinoField.getText().trim();
     String monederoDestinoStr = monederoDestinoCombo.getValue();
@@ -466,6 +552,10 @@ public class DashboardViewController {
     }
   }
 
+  /**
+   * Maneja el evento de crear un nuevo monedero, mostrando solo
+   * los tipos de monedero que el cliente aún no tiene
+   */
   @FXML
   private void handleCrearMonedero() {
     List<String> tiposDisponibles = new java.util.ArrayList<>();
@@ -526,6 +616,10 @@ public class DashboardViewController {
     });
   }
 
+  /**
+   * Maneja el evento de ver beneficios disponibles para canjear,
+   * mostrando la lista usando BeneficioDTO y permitiendo el canje
+   */
   @FXML
   private void handleVerBeneficios() {
     SistemaMonedero sistema = SistemaMonedero.getInstance();
@@ -586,6 +680,10 @@ public class DashboardViewController {
     });
   }
 
+  /**
+   * Maneja el evento de ver los beneficios activos del cliente
+   * que aún pueden ser utilizados
+   */
   @FXML
   private void handleVerBeneficiosActivos() {
     List<CanjeBeneficio> beneficiosActivos = clienteActual.getBeneficiosActivos()
@@ -614,6 +712,10 @@ public class DashboardViewController {
     alert.showAndWait();
   }
 
+  /**
+   * Maneja el evento de ver el reporte completo del cliente
+   * usando ResumenClienteDTO y el reporte detallado del sistema
+   */
   @FXML
   private void handleVerReporte() {
     SistemaMonedero sistema = SistemaMonedero.getInstance();
@@ -637,6 +739,10 @@ public class DashboardViewController {
     alert.showAndWait();
   }
 
+  /**
+   * Maneja el evento de ver el análisis de patrones de gasto
+   * del cliente con estadísticas detalladas
+   */
   @FXML
   private void handleVerAnalisisGastos() {
     AnalizadorPatrones.EstadisticasGasto stats = AnalizadorPatrones.analizarGastos(clienteActual);
@@ -648,6 +754,211 @@ public class DashboardViewController {
     alert.showAndWait();
   }
 
+  /**
+   * Carga y muestra la lista de transacciones programadas del cliente actual.
+   */
+  private void cargarTransaccionesProgramadas() {
+    programadasListView.getItems().clear();
+
+    List<TransaccionProgramada> programadas = sistema.obtenerTransaccionesProgramadasCliente(clienteActual);
+
+    if (programadas.isEmpty()) {
+      programadasListView.getItems().add("No hay transacciones programadas");
+    } else {
+      programadas.forEach(tp -> {
+        String estado = tp.isActiva() ? "[ACTIVA]" : "[INACTIVA]";
+        String info = String.format("%s %s | %s | Monto: %s | Proxima: %s | %s",
+            estado,
+            tp.getTipo().getDescripcion(),
+            tp.getDescripcion(),
+            formatearCOP(tp.getMonto()),
+            tp.getProximaEjecucion().toLocalDate(),
+            tp.getPeriodicidad().getDescripcion());
+        programadasListView.getItems().add(info);
+      });
+    }
+
+    programadasListView.setOnMouseClicked(event -> {
+      if (event.getClickCount() == 2) {
+        int indice = programadasListView.getSelectionModel().getSelectedIndex();
+        if (indice >= 0 && indice < programadas.size()) {
+          TransaccionProgramada tp = programadas.get(indice);
+          if (tp.isActiva()) {
+            tp.setActiva(false);
+            mostrarInfo("Transaccion programada desactivada");
+            cargarTransaccionesProgramadas();
+          }
+        }
+      }
+    });
+  }
+
+  /**
+   * Maneja el evento de programar una nueva transaccion.
+   * Abre un dialogo para configurar fecha, periodicidad y detalles.
+   */
+  @FXML
+  private void handleProgramarTransaccion() {
+    Dialog<TransaccionProgramada> dialog = new Dialog<>();
+    dialog.setTitle("Programar Transaccion");
+    dialog.setHeaderText("Configure la transaccion programada");
+
+    ButtonType programarButtonType = new ButtonType("Programar", ButtonBar.ButtonData.OK_DONE);
+    dialog.getDialogPane().getButtonTypes().addAll(programarButtonType, ButtonType.CANCEL);
+
+    ComboBox<String> tipoCombo = new ComboBox<>();
+    tipoCombo.setItems(FXCollections.observableArrayList(
+        "Deposito", "Retiro", "Transferencia"));
+    tipoCombo.setValue("Deposito");
+
+    ComboBox<String> monederoOrigenCombo = new ComboBox<>();
+    monederoOrigenCombo.setItems(FXCollections.observableArrayList(
+        "PRINCIPAL", "AHORRO", "GASTOS_DIARIOS", "EMERGENCIA", "INVERSION"));
+    monederoOrigenCombo.setValue("PRINCIPAL");
+
+    TextField montoField = new TextField();
+    montoField.setPromptText("Ejemplo: 50000");
+
+    TextField descripcionField = new TextField();
+    descripcionField.setPromptText("Descripcion de la transaccion");
+
+    TextField emailDestinoField = new TextField();
+    emailDestinoField.setPromptText("Solo para transferencias");
+
+    ComboBox<String> monederoDestinoCombo = new ComboBox<>();
+    monederoDestinoCombo.setItems(FXCollections.observableArrayList(
+        "PRINCIPAL", "AHORRO", "GASTOS_DIARIOS", "EMERGENCIA", "INVERSION"));
+    monederoDestinoCombo.setValue("PRINCIPAL");
+
+    DatePicker fechaPicker = new DatePicker();
+    fechaPicker.setValue(java.time.LocalDate.now().plusDays(1));
+
+    ComboBox<String> periodicidadCombo = new ComboBox<>();
+    periodicidadCombo.setItems(FXCollections.observableArrayList(
+        "UNICA", "DIARIA", "SEMANAL", "QUINCENAL", "MENSUAL", "ANUAL"));
+    periodicidadCombo.setValue("MENSUAL");
+
+    tipoCombo.setOnAction(e -> {
+      boolean esTransferencia = tipoCombo.getValue().equals("Transferencia");
+      emailDestinoField.setVisible(esTransferencia);
+      monederoDestinoCombo.setVisible(esTransferencia);
+    });
+
+    emailDestinoField.setVisible(false);
+    monederoDestinoCombo.setVisible(false);
+
+    javafx.scene.layout.GridPane grid = new javafx.scene.layout.GridPane();
+    grid.setHgap(10);
+    grid.setVgap(10);
+    grid.add(new Label("Tipo:"), 0, 0);
+    grid.add(tipoCombo, 1, 0);
+    grid.add(new Label("Monedero Origen:"), 0, 1);
+    grid.add(monederoOrigenCombo, 1, 1);
+    grid.add(new Label("Monto:"), 0, 2);
+    grid.add(montoField, 1, 2);
+    grid.add(new Label("Descripcion:"), 0, 3);
+    grid.add(descripcionField, 1, 3);
+    grid.add(new Label("Email Destino:"), 0, 4);
+    grid.add(emailDestinoField, 1, 4);
+    grid.add(new Label("Monedero Destino:"), 0, 5);
+    grid.add(monederoDestinoCombo, 1, 5);
+    grid.add(new Label("Fecha Ejecucion:"), 0, 6);
+    grid.add(fechaPicker, 1, 6);
+    grid.add(new Label("Periodicidad:"), 0, 7);
+    grid.add(periodicidadCombo, 1, 7);
+
+    dialog.getDialogPane().setContent(grid);
+
+    dialog.setResultConverter(dialogButton -> {
+      if (dialogButton == programarButtonType) {
+        try {
+
+          String montoStr = montoField.getText().trim()
+              .replace(".", "").replace(",", ".");
+          double monto = Double.parseDouble(montoStr);
+
+          if (monto <= 0) {
+            throw new IllegalArgumentException("El monto debe ser mayor a cero");
+          }
+
+          TipoTransaccion tipoTransaccion = switch (tipoCombo.getValue()) {
+            case "Deposito" -> TipoTransaccion.DEPOSITO;
+            case "Retiro" -> TipoTransaccion.RETIRO;
+            case "Transferencia" -> TipoTransaccion.TRANSFERENCIA;
+            default -> throw new IllegalArgumentException("Tipo invalido");
+          };
+
+          TipoMonedero monederoOrigen = TipoMonedero.valueOf(monederoOrigenCombo.getValue());
+
+          Cliente clienteDestino = null;
+          TipoMonedero monederoDestino = null;
+
+          if (tipoTransaccion == TipoTransaccion.TRANSFERENCIA) {
+            String emailDestino = emailDestinoField.getText().trim();
+            if (emailDestino.isEmpty()) {
+              throw new IllegalArgumentException("El email de destino es requerido para transferencias");
+            }
+
+            Optional<Cliente> destinoOpt = transaccionController.buscarClientePorEmail(emailDestino);
+            if (destinoOpt.isEmpty()) {
+              throw new IllegalArgumentException("Cliente destino no encontrado");
+            }
+
+            clienteDestino = destinoOpt.get();
+            monederoDestino = TipoMonedero.valueOf(monederoDestinoCombo.getValue());
+          }
+
+          LocalDateTime fechaEjecucion = fechaPicker.getValue().atStartOfDay();
+          Periodicidad periodicidad = Periodicidad.valueOf(periodicidadCombo.getValue());
+          String descripcion = descripcionField.getText().trim();
+
+          if (descripcion.isEmpty()) {
+            descripcion = tipoTransaccion.getDescripcion() + " programado";
+          }
+
+          return sistema.programarTransaccion(
+              tipoTransaccion,
+              monto,
+              descripcion,
+              clienteActual,
+              monederoOrigen,
+              clienteDestino,
+              monederoDestino,
+              fechaEjecucion,
+              periodicidad);
+
+        } catch (NumberFormatException e) {
+          mostrarAlerta("El monto ingresado no es valido", AlertType.ERROR);
+          return null;
+        } catch (Exception e) {
+          mostrarAlerta("Error: " + e.getMessage(), AlertType.ERROR);
+          return null;
+        }
+      }
+      return null;
+    });
+
+    Optional<TransaccionProgramada> result = dialog.showAndWait();
+    if (result.isPresent()) {
+      TransaccionProgramada tp = result.get();
+      mostrarExito(String.format(
+          "Transaccion programada exitosamente\n\n" +
+              "Tipo: %s\n" +
+              "Monto: %s\n" +
+              "Proxima ejecucion: %s\n" +
+              "Periodicidad: %s",
+          tp.getTipo().getDescripcion(),
+          formatearCOP(tp.getMonto()),
+          tp.getProximaEjecucion().toLocalDate(),
+          tp.getPeriodicidad().getDescripcion()));
+      cargarTransaccionesProgramadas();
+    }
+  }
+
+  /**
+   * Inicia un scheduler que procesa automáticamente las transacciones
+   * programadas cada minuto en segundo plano
+   */
   private void iniciarProcesadorTransacciones() {
     scheduler = Executors.newScheduledThreadPool(1);
     scheduler.scheduleAtFixedRate(() -> {
@@ -658,6 +969,10 @@ public class DashboardViewController {
     }, 0, 1, TimeUnit.MINUTES);
   }
 
+  /**
+   * Limpia todos los campos del formulario de transacciones
+   * y restablece los valores por defecto
+   */
   private void limpiarFormulario() {
     montoField.clear();
     descripcionArea.clear();
@@ -666,6 +981,12 @@ public class DashboardViewController {
     monederoOrigenCombo.setValue("PRINCIPAL");
   }
 
+  /**
+   * Muestra un diálogo de alerta con el mensaje y tipo especificados
+   * 
+   * @param mensaje El mensaje a mostrar
+   * @param tipo    Tipo de alerta (ERROR, WARNING, INFORMATION, etc.)
+   */
   private void mostrarAlerta(String mensaje, AlertType tipo) {
     Alert alert = new Alert(tipo);
     alert.setTitle(tipo == AlertType.ERROR ? "Error" : "Aviso");
@@ -674,6 +995,11 @@ public class DashboardViewController {
     alert.showAndWait();
   }
 
+  /**
+   * Muestra un diálogo de éxito con el mensaje especificado
+   * 
+   * @param mensaje El mensaje a mostrar
+   */
   private void mostrarExito(String mensaje) {
     Alert alert = new Alert(AlertType.INFORMATION);
     alert.setTitle("Operacion Exitosa");

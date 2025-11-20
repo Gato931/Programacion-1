@@ -1,45 +1,39 @@
 package co.edu.uniquindio.poo.controller;
 
 import java.util.Optional;
+import co.edu.uniquindio.poo.model.*;
 
-import co.edu.uniquindio.poo.model.Cliente;
-import co.edu.uniquindio.poo.model.Monedero;
-import co.edu.uniquindio.poo.model.SistemaMonedero;
-import co.edu.uniquindio.poo.model.TipoMonedero;
-
-/**
- * Controlador de lógica para las transacciones
- * Universidad del Quindío
- */
 public class TransaccionController {
 
   private SistemaMonedero sistema;
-
-  // Límites de transacción
-  private static final double MONTO_MINIMO = 1000.0; // 1.000 COP
-  private static final double MONTO_MAXIMO = 50_000_000.0; // 50 millones COP
+  private static final double MONTO_MINIMO = 1000.0;
+  private static final double MONTO_MAXIMO = 50_000_000.0;
 
   public TransaccionController() {
     this.sistema = SistemaMonedero.getInstance();
   }
 
   /**
-   * Realizar un depósito con validaciones
+   * Realiza un depósito validando monto, cliente y monedero
+   * Normaliza la descripción si está vacía
+   * 
+   * @param cliente      Cliente que deposita
+   * @param tipoMonedero Monedero donde depositar
+   * @param monto        Cantidad a depositar
+   * @param descripcion  Descripción del depósito
+   * @return true si fue exitoso
    */
   public boolean realizarDeposito(Cliente cliente, TipoMonedero tipoMonedero,
       double monto, String descripcion) {
     try {
-      // Validaciones
       validarMonto(monto);
       validarCliente(cliente);
       validarMonederoExiste(cliente, tipoMonedero);
 
-      // Normalizar descripción
       if (descripcion == null || descripcion.trim().isEmpty()) {
         descripcion = "Deposito en " + tipoMonedero.getNombre();
       }
 
-      // Realizar transacción
       boolean exitoso = sistema.realizarDeposito(cliente, tipoMonedero, monto, descripcion);
 
       if (exitoso) {
@@ -48,7 +42,6 @@ public class TransaccionController {
       }
 
       return exitoso;
-
     } catch (Exception e) {
       System.err.println("Error en deposito: " + e.getMessage());
       return false;
@@ -56,12 +49,17 @@ public class TransaccionController {
   }
 
   /**
-   * Realizar un retiro con validaciones
+   * Realiza un retiro con validaciones de saldo y límites
+   * 
+   * @param cliente      Cliente que retira
+   * @param tipoMonedero Monedero desde donde retirar
+   * @param monto        Cantidad a retirar
+   * @param descripcion  Descripción del retiro
+   * @return true si fue exitoso
    */
   public boolean realizarRetiro(Cliente cliente, TipoMonedero tipoMonedero,
       double monto, String descripcion) {
     try {
-      // Validaciones
       validarMonto(monto);
       validarCliente(cliente);
 
@@ -72,19 +70,16 @@ public class TransaccionController {
 
       Monedero monedero = monederoOpt.get();
 
-      // Verificar saldo suficiente
       if (monedero.getSaldo() < monto) {
         throw new IllegalArgumentException(String.format(
             "Saldo insuficiente. Disponible: $%,.0f COP, Solicitado: $%,.0f COP",
             monedero.getSaldo(), monto));
       }
 
-      // Normalizar descripción
       if (descripcion == null || descripcion.trim().isEmpty()) {
         descripcion = "Retiro de " + tipoMonedero.getNombre();
       }
 
-      // Realizar transacción
       boolean exitoso = sistema.realizarRetiro(cliente, tipoMonedero, monto, descripcion);
 
       if (exitoso) {
@@ -93,7 +88,6 @@ public class TransaccionController {
       }
 
       return exitoso;
-
     } catch (Exception e) {
       System.err.println("Error en retiro: " + e.getMessage());
       return false;
@@ -101,31 +95,36 @@ public class TransaccionController {
   }
 
   /**
-   * Realizar una transferencia con validaciones completas
+   * Realiza una transferencia entre dos clientes
+   * Valida que no sea a sí mismo y que tenga saldo suficiente incluyendo comisión
+   * 
+   * @param clienteOrigen   Cliente que envía
+   * @param monederoOrigen  Monedero origen
+   * @param clienteDestino  Cliente que recibe
+   * @param monederoDestino Monedero destino
+   * @param monto           Monto a transferir (sin comisión)
+   * @param descripcion     Descripción de la transferencia
+   * @return true si fue exitosa
    */
   public boolean realizarTransferencia(Cliente clienteOrigen, TipoMonedero monederoOrigen,
       Cliente clienteDestino, TipoMonedero monederoDestino,
       double monto, String descripcion) {
     try {
-      // Validaciones básicas
       validarMonto(monto);
       validarCliente(clienteOrigen);
       validarCliente(clienteDestino);
 
-      // Validar que no sea a sí mismo
       if (clienteOrigen.getId().equals(clienteDestino.getId())) {
         throw new IllegalArgumentException("No puede transferir a su propia cuenta");
       }
 
-      // Validar monederos
       validarMonederoExiste(clienteOrigen, monederoOrigen);
       validarMonederoExiste(clienteDestino, monederoDestino);
 
-      // Verificar saldo suficiente (incluyendo comisión estimada)
       Optional<Monedero> monederoOrigenOpt = clienteOrigen.obtenerMonedero(monederoOrigen);
       if (monederoOrigenOpt.isPresent()) {
         Monedero monedero = monederoOrigenOpt.get();
-        double comisionEstimada = monto * 0.01; // 1% de comisión
+        double comisionEstimada = monto * 0.01;
         double montoTotal = monto + comisionEstimada;
 
         if (monedero.getSaldo() < montoTotal) {
@@ -135,12 +134,10 @@ public class TransaccionController {
         }
       }
 
-      // Normalizar descripción
       if (descripcion == null || descripcion.trim().isEmpty()) {
         descripcion = "Transferencia a " + clienteDestino.getNombre();
       }
 
-      // Realizar transacción
       boolean exitoso = sistema.realizarTransferencia(
           clienteOrigen, monederoOrigen,
           clienteDestino, monederoDestino,
@@ -152,7 +149,6 @@ public class TransaccionController {
       }
 
       return exitoso;
-
     } catch (Exception e) {
       System.err.println("Error en transferencia: " + e.getMessage());
       return false;
@@ -160,7 +156,10 @@ public class TransaccionController {
   }
 
   /**
-   * Validar que el monto esté dentro de los rangos permitidos
+   * Valida que el monto esté dentro de los límites permitidos
+   * 
+   * @param monto El monto a validar
+   * @throws IllegalArgumentException si está fuera de los límites
    */
   private void validarMonto(double monto) {
     if (monto < MONTO_MINIMO) {
@@ -175,7 +174,10 @@ public class TransaccionController {
   }
 
   /**
-   * Validar que el cliente no sea nulo y esté activo
+   * Valida que el cliente no sea nulo y esté activo
+   * 
+   * @param cliente El cliente a validar
+   * @throws IllegalArgumentException si es nulo o inactivo
    */
   private void validarCliente(Cliente cliente) {
     if (cliente == null) {
@@ -188,7 +190,11 @@ public class TransaccionController {
   }
 
   /**
-   * Validar que el cliente tenga el monedero especificado
+   * Valida que el cliente tenga el monedero especificado
+   * 
+   * @param cliente El cliente a verificar
+   * @param tipo    El tipo de monedero requerido
+   * @throws IllegalArgumentException si no tiene ese monedero
    */
   private void validarMonederoExiste(Cliente cliente, TipoMonedero tipo) {
     if (cliente.obtenerMonedero(tipo).isEmpty()) {
@@ -198,7 +204,10 @@ public class TransaccionController {
   }
 
   /**
-   * Buscar cliente por email
+   * Busca un cliente por su email
+   * 
+   * @param email Email a buscar (normaliza a minúsculas)
+   * @return Optional con el cliente si existe
    */
   public Optional<Cliente> buscarClientePorEmail(String email) {
     if (email == null || email.trim().isEmpty()) {
@@ -208,7 +217,10 @@ public class TransaccionController {
   }
 
   /**
-   * Obtener información del saldo de un cliente
+   * Genera un resumen de los saldos de todos los monederos del cliente
+   * 
+   * @param cliente El cliente del resumen
+   * @return String formateado con los saldos
    */
   public String obtenerResumenSaldos(Cliente cliente) {
     StringBuilder resumen = new StringBuilder();
@@ -220,13 +232,9 @@ public class TransaccionController {
     });
 
     resumen.append(String.format("Total: $%,.0f COP", cliente.calcularSaldoTotal()));
-
     return resumen.toString();
   }
 
-  /**
-   * Obtener el sistema
-   */
   public SistemaMonedero getSistema() {
     return sistema;
   }

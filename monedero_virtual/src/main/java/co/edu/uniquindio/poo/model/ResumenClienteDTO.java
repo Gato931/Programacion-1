@@ -7,18 +7,24 @@ public record ResumenClienteDTO(
     int cantidadMonederos,
     double saldoTotal,
     int cantidadTransacciones) {
+  /**
+   * Genera un reporte formateado del resumen del cliente
+   * con toda su información básica en formato de tabla
+   * 
+   * @return String con el reporte completo del resumen
+   */
   public String generarReporte() {
     return String.format("""
-        ═══════════════════════════════════
+
         RESUMEN DE CLIENTE
-        ═══════════════════════════════════
+
         Cliente: %s
         Rango: %s %s
         Puntos: %d
         Monederos: %d
         Saldo Total: $%.2f
         Transacciones: %d
-        ═══════════════════════════════════
+
         """,
         nombreCliente,
         rango.getIcono(),

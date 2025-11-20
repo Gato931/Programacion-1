@@ -16,6 +16,13 @@ public class Retiro extends Transaccion {
     this.monederoOrigen = origen;
   }
 
+  /**
+   * Ejecuta el retiro descontando el monto del monedero origen si hay saldo
+   * suficiente,
+   * acumulando puntos según el rango del cliente
+   * 
+   * @return true si el retiro se completó exitosamente, false si fue rechazado
+   */
   @Override
   public boolean ejecutar() {
     if (!esValida()) {
@@ -37,6 +44,12 @@ public class Retiro extends Transaccion {
     return false;
   }
 
+  /**
+   * Revierte un retiro completado, devolviendo el monto al monedero
+   * y descontando los puntos generados si es posible
+   * 
+   * @return true si la reversión fue exitosa, false en caso contrario
+   */
   @Override
   public boolean revertir() {
     if (getEstado() != EstadoTransaccion.COMPLETADA) {
@@ -54,6 +67,12 @@ public class Retiro extends Transaccion {
     return true;
   }
 
+  /**
+   * Obtiene la lista de errores de validación específicos de un retiro,
+   * verificando existencia, estado activo y saldo suficiente del monedero origen
+   * 
+   * @return Lista de mensajes de error encontrados
+   */
   @Override
   public List<String> obtenerErroresValidacion() {
     List<String> errores = super.obtenerErroresValidacion();
@@ -75,6 +94,12 @@ public class Retiro extends Transaccion {
     return monederoOrigen;
   }
 
+  /**
+   * Genera un reporte detallado del retiro incluyendo
+   * información del monedero origen
+   * 
+   * @return String formateado con los detalles del retiro
+   */
   @Override
   public String generarReporteDetallado() {
     return super.generarReporteDetallado() +
